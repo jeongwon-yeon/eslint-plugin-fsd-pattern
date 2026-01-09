@@ -1,6 +1,4 @@
 export interface FSDLayerConfig {
-  /** Whether to use plural form for layer names (e.g., 'pages' vs 'page') */
-  usePlural?: boolean;
   /** Custom layer names mapping */
   customLayers?: {
     app?: string;
@@ -12,12 +10,12 @@ export interface FSDLayerConfig {
   };
 }
 
-export const DEFAULT_LAYERS = {
+export const DEFAULT_LAYER_TOKENS = {
   app: 'app',
-  pages: 'pages',
-  widgets: 'widgets',
-  features: 'features',
-  entities: 'entities',
+  pages: 'page',
+  widgets: 'widget',
+  features: 'feature',
+  entities: 'entity',
   shared: 'shared',
 } as const;
 
@@ -39,17 +37,25 @@ export type LayerName = (typeof LAYER_HIERARCHY)[number];
 /**
  * Get configured layer names based on user settings
  */
-export function getLayerNames(config: FSDLayerConfig = {}): Record<LayerName, string> {
-  const { usePlural = true, customLayers = {} } = config;
+export function getLayerTokens(config: FSDLayerConfig = {}): Record<LayerName, string> {
+  const { customLayers = {} } = config;
 
   return {
-    app: customLayers.app || 'app',
-    pages: customLayers.pages || (usePlural ? 'pages' : 'page'),
-    widgets: customLayers.widgets || (usePlural ? 'widgets' : 'widget'),
-    features: customLayers.features || (usePlural ? 'features' : 'feature'),
-    entities: customLayers.entities || (usePlural ? 'entities' : 'entity'),
-    shared: customLayers.shared || 'shared',
+    app: customLayers.app || DEFAULT_LAYER_TOKENS.app,
+    pages: customLayers.pages || DEFAULT_LAYER_TOKENS.pages,
+    widgets: customLayers.widgets || DEFAULT_LAYER_TOKENS.widgets,
+    features: customLayers.features || DEFAULT_LAYER_TOKENS.features,
+    entities: customLayers.entities || DEFAULT_LAYER_TOKENS.entities,
+    shared: customLayers.shared || DEFAULT_LAYER_TOKENS.shared,
   };
+}
+
+function normalizeSegment(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function matchesLayerSegment(segment: string, token: string): boolean {
+  return normalizeSegment(segment).includes(normalizeSegment(token));
 }
 
 /**
@@ -62,13 +68,13 @@ export function extractLayerFromPath(
   filePath: string,
   config: FSDLayerConfig = {}
 ): LayerName | null {
-  const layerNames = getLayerNames(config);
+  const layerTokens = getLayerTokens(config);
   const normalizedPath = filePath.replace(/\\/g, '/');
+  const pathSegments = normalizedPath.split('/');
 
   // Try to match any of the configured layer names
-  for (const [key, value] of Object.entries(layerNames)) {
-    const layerPattern = new RegExp(`(?:^|/)${value}(?:/|$)`);
-    if (layerPattern.test(normalizedPath)) {
+  for (const [key, value] of Object.entries(layerTokens)) {
+    if (pathSegments.some((segment) => matchesLayerSegment(segment, value))) {
       return key as LayerName;
     }
   }
@@ -86,14 +92,15 @@ export function extractLayerFromImport(
   importPath: string,
   config: FSDLayerConfig = {}
 ): LayerName | null {
-  const layerNames = getLayerNames(config);
+  const layerTokens = getLayerTokens(config);
 
   // Remove path alias prefix like '@/', '~/', etc.
-  const normalizedImport = importPath.replace(/^[@~]\//, '');
+  const normalizedImport = importPath.replace(/^[@~]\//, '').replace(/^[@~]/, '');
+  const [firstSegment] = normalizedImport.split('/');
 
   // Check if import starts with a layer name
-  for (const [key, value] of Object.entries(layerNames)) {
-    if (normalizedImport === value || normalizedImport.startsWith(`${value}/`)) {
+  for (const [key, value] of Object.entries(layerTokens)) {
+    if (firstSegment && matchesLayerSegment(firstSegment, value)) {
       return key as LayerName;
     }
   }

@@ -31,11 +31,6 @@ const rule: Rule.RuleModule = {
       {
         type: 'object',
         properties: {
-          usePlural: {
-            type: 'boolean',
-            description: 'Whether to use plural form for layer names (default: true)',
-            default: true,
-          },
           customLayers: {
             type: 'object',
             description: 'Custom layer name mappings',
@@ -78,13 +73,6 @@ const rule: Rule.RuleModule = {
 
         // Skip relative imports within same directory
         if (importPath.startsWith('.')) {
-          return;
-        }
-
-        // Skip node_modules imports
-        if (!importPath.startsWith('@/') &&
-            !importPath.startsWith('~/') &&
-            !importPath.match(/^(app|pages?|widgets?|features?|entities|shared)/)) {
           return;
         }
 
