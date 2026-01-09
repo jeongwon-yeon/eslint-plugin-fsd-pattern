@@ -50,8 +50,12 @@ export function getLayerTokens(config: FSDLayerConfig = {}): Record<LayerName, s
   };
 }
 
+function normalizeSegment(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 function matchesLayerSegment(segment: string, token: string): boolean {
-  return segment.toLowerCase().includes(token.toLowerCase());
+  return normalizeSegment(segment).includes(normalizeSegment(token));
 }
 
 /**
@@ -91,7 +95,7 @@ export function extractLayerFromImport(
   const layerTokens = getLayerTokens(config);
 
   // Remove path alias prefix like '@/', '~/', etc.
-  const normalizedImport = importPath.replace(/^[@~]\//, '');
+  const normalizedImport = importPath.replace(/^[@~]\//, '').replace(/^[@~]/, '');
   const [firstSegment] = normalizedImport.split('/');
 
   // Check if import starts with a layer name

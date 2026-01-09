@@ -232,7 +232,7 @@ ruleTesterTokens.run('layer-imports token matching', rule, {
     },
     {
       code: "import { User } from '@page/user';",
-      filename: '/project/src/features/auth/model.ts',
+      filename: '/project/src/app/routes.tsx',
     },
     {
       code: "import { api } from '@/shared/api';",
@@ -247,6 +247,15 @@ ruleTesterTokens.run('layer-imports token matching', rule, {
     {
       code: "import { Header } from '@/widget/header';",
       filename: '/project/src/feature/auth/ui/LoginForm.tsx',
+      errors: [
+        {
+          messageId: 'invalidLayerImport',
+        },
+      ],
+    },
+    {
+      code: "import { User } from '@page/user';",
+      filename: '/project/src/features/auth/model.ts',
       errors: [
         {
           messageId: 'invalidLayerImport',
