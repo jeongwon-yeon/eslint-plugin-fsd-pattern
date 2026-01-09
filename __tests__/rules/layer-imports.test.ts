@@ -216,32 +216,55 @@ ruleTester.run('layer-imports', rule, {
   ],
 });
 
-// Test with custom configuration (usePlural: false)
-const ruleTesterSingular = new RuleTester({
+// Test token-based layer detection
+const ruleTesterTokens = new RuleTester({
   languageOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
   },
 });
 
-ruleTesterSingular.run('layer-imports with usePlural: false', rule, {
+ruleTesterTokens.run('layer-imports token matching', rule, {
   valid: [
     {
-      code: "import { User } from '@/entity/user';",
-      filename: '/project/src/feature/auth/model.ts',
-      options: [{ usePlural: false }],
+      code: "import { User } from '@/entities/user';",
+      filename: '/project/src/1-page/home/ui/HomePage.tsx',
     },
     {
-      code: "import { Button } from '@/shared/ui';",
-      filename: '/project/src/page/home/ui/HomePage.tsx',
-      options: [{ usePlural: false }],
+      code: "import { User } from '@page/user';",
+      filename: '/project/src/features/auth/model.ts',
+    },
+    {
+      code: "import { api } from '@/shared/api';",
+      filename: '/project/src/widgets-legacy/sidebar/ui/Sidebar.tsx',
+    },
+    {
+      code: "import { Card } from '@/shared/ui';",
+      filename: '/project/src/entities_v2/user/ui/UserCard.tsx',
     },
   ],
   invalid: [
     {
-      code: "import { LoginForm } from '@/feature/auth';",
-      filename: '/project/src/entity/user/model.ts',
-      options: [{ usePlural: false }],
+      code: "import { Header } from '@/widget/header';",
+      filename: '/project/src/feature/auth/ui/LoginForm.tsx',
+      errors: [
+        {
+          messageId: 'invalidLayerImport',
+        },
+      ],
+    },
+    {
+      code: "import { User } from '@/entity/user';",
+      filename: '/project/src/shared-kit/ui/Avatar.tsx',
+      errors: [
+        {
+          messageId: 'invalidLayerImport',
+        },
+      ],
+    },
+    {
+      code: "import { Router } from '@/app/router';",
+      filename: '/project/src/page/home/ui/HomePage.tsx',
       errors: [
         {
           messageId: 'invalidLayerImport',
